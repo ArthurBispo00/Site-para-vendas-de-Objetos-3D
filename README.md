@@ -1,0 +1,2 @@
+# Site-para-vendas-de-Objetos-3D
+Este repositório contém o código-fonte desenvolvido para o Projeto Integrador II da Univesp. O software consiste em um catálogo web criado para auxiliar pequenas empresas na divulgação de produtos (objetos 3D), gestão de inventário e controle de vendas.
