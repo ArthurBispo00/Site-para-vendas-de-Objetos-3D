@@ -121,8 +121,8 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
         </button>
       </aside>
 
-      <main className="flex-1 px-4 py-6 sm:px-8">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 pb-6">
+      <main className="min-w-0 flex-1 px-4 py-6 sm:px-8">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 pb-6">
           <h1 className="text-2xl font-extrabold">Painel administrativo</h1>
           <button
             type="button"
@@ -146,9 +146,9 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
           )}
         </div>
 
-        <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-2">
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-2">
           {/* ---------- Novo produto ---------- */}
-          <section aria-labelledby="novo-titulo" className="rounded-2xl bg-white p-6 shadow-card">
+          <section aria-labelledby="novo-titulo" className="min-w-0 rounded-2xl bg-white p-6 shadow-card">
             <div className="flex items-center gap-3 border-b border-ink/10 pb-4">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-100 text-gold-700">
                 <Plus aria-hidden="true" className="h-5 w-5" />
@@ -300,7 +300,7 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
           </section>
 
           {/* ---------- Produtos publicados ---------- */}
-          <section aria-labelledby="publicados-titulo" className="h-fit rounded-2xl bg-white p-6 shadow-card">
+          <section aria-labelledby="publicados-titulo" className="h-fit min-w-0 rounded-2xl bg-white p-6 shadow-card">
             <div className="flex items-start justify-between gap-3 border-b border-ink/10 pb-4">
               <div>
                 <h2 id="publicados-titulo" className="font-bold">
