@@ -1,0 +1,19 @@
+# dependências e build
+node_modules/
+dist/
+coverage/
+
+# variáveis de ambiente (nunca commitar)
+.env
+.env.local
+.env.*.local
+
+# logs e arquivos de sistema
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# editores
+.vscode/
+.idea/
