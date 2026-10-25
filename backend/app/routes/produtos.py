@@ -9,6 +9,9 @@ from app.schemas.produto import ProdutoCreate, ProdutoResponse
 
 from fastapi import HTTPException
 
+from app.core.dependencies import obter_administrador_atual
+from app.models import Administrador
+
 router = APIRouter(prefix="/produtos", tags=["Produtos"])
 
 
@@ -26,6 +29,7 @@ def listar_produtos(db: Session = Depends(get_db)):
 def cadastrar_produto(
     dados: ProdutoCreate,
     db: Session = Depends(get_db),
+    administrador: Administrador = Depends(obter_administrador_atual),
 ):
     produto = Produto(**dados.model_dump())
 
@@ -40,6 +44,7 @@ def cadastrar_produto(
 def excluir_produto(
     produto_id: int,
     db: Session = Depends(get_db),
+    administrador: Administrador = Depends(obter_administrador_atual),
 ):
     produto = db.get(Produto, produto_id)
 
@@ -60,6 +65,7 @@ def editar_produto(
     produto_id: int,
     dados: ProdutoCreate,
     db: Session = Depends(get_db),
+    administrador: Administrador = Depends(obter_administrador_atual),
 ):
     produto = db.get(Produto, produto_id)
 
