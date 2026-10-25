@@ -36,6 +36,7 @@ export default function AdminDashboard({
   const [confirmId, setConfirmId] = useState(null); // produto aguardando confirmação de exclusão
   const fileRef = useRef(null);
   const [editingId, setEditingId] = useState(null);
+  const [imagemUrlAtual, setImagemUrlAtual] = useState(null);
 
   // libera a URL temporária da pré-visualização
   useEffect(() => {
@@ -53,6 +54,7 @@ export default function AdminDashboard({
 
   const handleEdit = (product) => {
     setEditingId(product.id);
+    setImagemUrlAtual(product.imagemUrl ?? product.imagem_url ?? null);
 
     setForm({
       nome: product.nome ?? "",
@@ -71,6 +73,7 @@ export default function AdminDashboard({
 
   const handleCancelEdit = () => {
     setEditingId(null);
+    setImagemUrlAtual(null);
     setForm(EMPTY_FORM);
     setImagem(null);
     setErrors({});
@@ -109,6 +112,7 @@ export default function AdminDashboard({
         gramatura: parseWeight(form.gramatura),
         preco: parseDecimal(form.preco),
         imagem,
+        imagem_url: imagemUrlAtual,
       };
 
       if (editingId !== null) {
@@ -118,8 +122,16 @@ export default function AdminDashboard({
       }
       setForm(EMPTY_FORM);
       setImagem(null);
+      setEditingId(null);
+      setImagemUrlAtual(null);
       if (fileRef.current) fileRef.current.value = "";
-      setStatus({ type: "success", message: "Produto adicionado à vitrine." });
+      setStatus({
+        type: "success",
+        message:
+          editingId !== null
+            ? "Produto atualizado com sucesso."
+            : "Produto adicionado à vitrine.",
+      });
     } catch (err) {
       setStatus({ type: "error", message: toUserMessage(err) });
     } finally {
@@ -463,14 +475,24 @@ export default function AdminDashboard({
                         </button>
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => setConfirmId(product.id)}
-                        aria-label={`Excluir ${product.nome}`}
-                        className="rounded-xl bg-red-50 p-2.5 text-red-700 transition hover:bg-red-100"
-                      >
-                        <Trash2 aria-hidden="true" className="h-4 w-4" />
-                      </button>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(product)}
+                          aria-label={`Editar ${product.nome}`}
+                          className="rounded-xl border border-ink/15 px-3 py-2 text-xs font-semibold transition hover:bg-ink/5"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmId(product.id)}
+                          aria-label={`Excluir ${product.nome}`}
+                          className="rounded-xl bg-red-50 p-2.5 text-red-700 transition hover:bg-red-100"
+                        >
+                          <Trash2 aria-hidden="true" className="h-4 w-4" />
+                        </button>
+                      </div>
                     )}
                   </li>
                 ))}
