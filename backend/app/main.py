@@ -3,6 +3,7 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.initial_data import criar_administrador_inicial
 from app.routes.auth import router as auth_router
@@ -41,6 +42,18 @@ As operações administrativas exigem um token JWT obtido pelo endpoint
         "name": "Equipe Jaca 3D",
     },
     lifespan=lifespan,
+)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
