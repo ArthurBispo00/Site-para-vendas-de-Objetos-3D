@@ -1,26 +1,45 @@
-import { LogOut, Package, Plus, Store, Trash2, Upload } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { toUserMessage } from '../services/apiService';
-import { CATEGORIES } from '../utils/constants';
-import { formatPrice, formatWeight } from '../utils/formatters';
-import { parseDecimal, parseWeight, validateImage, validateProduct } from '../utils/validation';
-import Logo from './Logo';
+import { LogOut, Package, Plus, Store, Trash2, Upload } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toUserMessage } from "../services/apiService";
+import { CATEGORIES } from "../utils/constants";
+import { formatPrice, formatWeight } from "../utils/formatters";
+import {
+  parseDecimal,
+  parseWeight,
+  validateImage,
+  validateProduct,
+} from "../utils/validation";
+import Logo from "./Logo";
 
-const EMPTY_FORM = { nome: '', descricao: '', categoria: '', gramatura: '', preco: '' };
+const EMPTY_FORM = {
+  nome: "",
+  descricao: "",
+  categoria: "",
+  gramatura: "",
+  preco: "",
+};
 
-export default function AdminDashboard({ products, onCreate, onDelete, onLogout, onBackToStore }) {
+export default function AdminDashboard({
+  products,
+  onCreate,
+  onEdit,
+  onDelete,
+  onLogout,
+  onBackToStore,
+}) {
   const [form, setForm] = useState(EMPTY_FORM);
   const [imagem, setImagem] = useState(null);
   const [preview, setPreview] = useState(null);
   const [errors, setErrors] = useState({});
-  const [status, setStatus] = useState({ type: '', message: '' });
+  const [status, setStatus] = useState({ type: "", message: "" });
   const [saving, setSaving] = useState(false);
   const [confirmId, setConfirmId] = useState(null); // produto aguardando confirmação de exclusão
   const fileRef = useRef(null);
+  const [editingId, setEditingId] = useState(null);
 
   // libera a URL temporária da pré-visualização
   useEffect(() => {
-    if (!imagem || typeof URL.createObjectURL !== 'function') {
+    if (!imagem || typeof URL.createObjectURL !== "function") {
       setPreview(null);
       return undefined;
     }
@@ -29,19 +48,48 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
     return () => URL.revokeObjectURL?.(url);
   }, [imagem]);
 
-  const setField = (name) => (event) => setForm((prev) => ({ ...prev, [name]: event.target.value }));
+  const setField = (name) => (event) =>
+    setForm((prev) => ({ ...prev, [name]: event.target.value }));
+
+  const handleEdit = (product) => {
+    setEditingId(product.id);
+
+    setForm({
+      nome: product.nome ?? "",
+      descricao: product.descricao ?? "",
+      categoria: product.categoria ?? "",
+      gramatura: String(product.gramatura ?? ""),
+      preco: String(product.preco ?? "").replace(".", ","),
+    });
+
+    setImagem(null);
+    setErrors({});
+    setStatus({ type: "", message: "" });
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setImagem(null);
+    setErrors({});
+    setStatus({ type: "", message: "" });
+
+    if (fileRef.current) fileRef.current.value = "";
+  };
 
   const handleFile = (event) => {
     const file = event.target.files?.[0] ?? null;
     const imageError = validateImage(file);
     setErrors((prev) => ({ ...prev, imagem: imageError ?? undefined }));
     setImagem(imageError ? null : file);
-    if (imageError) event.target.value = '';
+    if (imageError) event.target.value = "";
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setStatus({ type: '', message: '' });
+    setStatus({ type: "", message: "" });
 
     const found = validateProduct({ ...form, imagem });
     setErrors(found);
@@ -54,20 +102,26 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
 
     setSaving(true);
     try {
-      await onCreate({
+      const productData = {
         nome: form.nome.trim(),
         descricao: form.descricao.trim(),
         categoria: form.categoria,
         gramatura: parseWeight(form.gramatura),
         preco: parseDecimal(form.preco),
         imagem,
-      });
+      };
+
+      if (editingId !== null) {
+        await onEdit(editingId, productData);
+      } else {
+        await onCreate(productData);
+      }
       setForm(EMPTY_FORM);
       setImagem(null);
-      if (fileRef.current) fileRef.current.value = '';
-      setStatus({ type: 'success', message: 'Produto adicionado à vitrine.' });
+      if (fileRef.current) fileRef.current.value = "";
+      setStatus({ type: "success", message: "Produto adicionado à vitrine." });
     } catch (err) {
-      setStatus({ type: 'error', message: toUserMessage(err) });
+      setStatus({ type: "error", message: toUserMessage(err) });
     } finally {
       setSaving(false);
     }
@@ -77,15 +131,18 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
     setConfirmId(null);
     try {
       await onDelete(product.id);
-      setStatus({ type: 'success', message: `"${product.nome}" foi removido.` });
+      setStatus({
+        type: "success",
+        message: `"${product.nome}" foi removido.`,
+      });
     } catch (err) {
-      setStatus({ type: 'error', message: toUserMessage(err) });
+      setStatus({ type: "error", message: toUserMessage(err) });
     }
   };
 
   const fieldClass = (name) =>
     `w-full rounded-xl border bg-white px-4 py-3 text-sm placeholder:text-ink/55 ${
-      errors[name] ? 'border-red-600' : 'border-ink/15'
+      errors[name] ? "border-red-600" : "border-ink/15"
     }`;
 
   const ErrorText = ({ name }) =>
@@ -138,7 +195,9 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
           {status.message && (
             <p
               className={`mb-4 rounded-xl px-4 py-3 text-sm font-medium ${
-                status.type === 'error' ? 'bg-red-50 text-red-800' : 'bg-jaca-50 text-jaca-800'
+                status.type === "error"
+                  ? "bg-red-50 text-red-800"
+                  : "bg-jaca-50 text-jaca-800"
               }`}
             >
               {status.message}
@@ -148,7 +207,10 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
 
         <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-2">
           {/* ---------- Novo produto ---------- */}
-          <section aria-labelledby="novo-titulo" className="min-w-0 rounded-2xl bg-white p-6 shadow-card">
+          <section
+            aria-labelledby="novo-titulo"
+            className="min-w-0 rounded-2xl bg-white p-6 shadow-card"
+          >
             <div className="flex items-center gap-3 border-b border-ink/10 pb-4">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gold-100 text-gold-700">
                 <Plus aria-hidden="true" className="h-5 w-5" />
@@ -157,13 +219,18 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
                 <h2 id="novo-titulo" className="font-bold">
                   Novo produto
                 </h2>
-                <p className="text-sm text-ink/70">Preencha os dados para publicar na vitrine.</p>
+                <p className="text-sm text-ink/70">
+                  Preencha os dados para publicar na vitrine.
+                </p>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} noValidate className="mt-5 space-y-5">
               <div>
-                <span id="foto-rotulo" className="mb-1.5 block text-sm font-semibold">
+                <span
+                  id="foto-rotulo"
+                  className="mb-1.5 block text-sm font-semibold"
+                >
                   Foto do produto
                 </span>
                 <label
@@ -171,23 +238,29 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
                   className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-ink/20 bg-ink/[0.03] p-6 text-center focus-within:ring-2 focus-within:ring-jaca-600 focus-within:ring-offset-2 hover:border-jaca-600"
                 >
                   {preview ? (
-                    <img src={preview} alt="Pré-visualização da foto selecionada" className="h-32 w-32 rounded-xl object-cover" />
+                    <img
+                      src={preview}
+                      alt="Pré-visualização da foto selecionada"
+                      className="h-32 w-32 rounded-xl object-cover"
+                    />
                   ) : (
                     <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-jaca-600 shadow-sm">
                       <Upload aria-hidden="true" className="h-5 w-5" />
                     </span>
                   )}
                   <span className="mt-2 text-sm font-semibold">
-                    {imagem ? imagem.name : 'Selecionar uma imagem'}
+                    {imagem ? imagem.name : "Selecionar uma imagem"}
                   </span>
-                  <span className="text-xs text-ink/70">JPG, PNG ou WebP • máximo de 5 MB</span>
+                  <span className="text-xs text-ink/70">
+                    JPG, PNG ou WebP • máximo de 5 MB
+                  </span>
                   <input
                     id="campo-imagem"
                     ref={fileRef}
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
                     onChange={handleFile}
-                    aria-describedby={describe('imagem')}
+                    aria-describedby={describe("imagem")}
                     aria-invalid={Boolean(errors.imagem)}
                     className="sr-only"
                   />
@@ -196,33 +269,39 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
               </div>
 
               <div>
-                <label htmlFor="campo-nome" className="mb-1.5 block text-sm font-semibold">
+                <label
+                  htmlFor="campo-nome"
+                  className="mb-1.5 block text-sm font-semibold"
+                >
                   Nome do objeto
                 </label>
                 <input
                   id="campo-nome"
                   type="text"
                   value={form.nome}
-                  onChange={setField('nome')}
+                  onChange={setField("nome")}
                   placeholder="Ex: Vaso geométrico"
                   aria-invalid={Boolean(errors.nome)}
-                  aria-describedby={describe('nome')}
-                  className={fieldClass('nome')}
+                  aria-describedby={describe("nome")}
+                  className={fieldClass("nome")}
                 />
                 <ErrorText name="nome" />
               </div>
 
               <div>
-                <label htmlFor="campo-categoria" className="mb-1.5 block text-sm font-semibold">
+                <label
+                  htmlFor="campo-categoria"
+                  className="mb-1.5 block text-sm font-semibold"
+                >
                   Categoria
                 </label>
                 <select
                   id="campo-categoria"
                   value={form.categoria}
-                  onChange={setField('categoria')}
+                  onChange={setField("categoria")}
                   aria-invalid={Boolean(errors.categoria)}
-                  aria-describedby={describe('categoria')}
-                  className={fieldClass('categoria')}
+                  aria-describedby={describe("categoria")}
+                  className={fieldClass("categoria")}
                 >
                   <option value="">Selecione…</option>
                   {CATEGORIES.map((c) => (
@@ -235,25 +314,31 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
               </div>
 
               <div>
-                <label htmlFor="campo-descricao" className="mb-1.5 block text-sm font-semibold">
+                <label
+                  htmlFor="campo-descricao"
+                  className="mb-1.5 block text-sm font-semibold"
+                >
                   Descrição
                 </label>
                 <textarea
                   id="campo-descricao"
                   rows={4}
                   value={form.descricao}
-                  onChange={setField('descricao')}
+                  onChange={setField("descricao")}
                   placeholder="Conte os detalhes e diferenciais da peça..."
                   aria-invalid={Boolean(errors.descricao)}
-                  aria-describedby={describe('descricao')}
-                  className={fieldClass('descricao')}
+                  aria-describedby={describe("descricao")}
+                  className={fieldClass("descricao")}
                 />
                 <ErrorText name="descricao" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="campo-gramatura" className="mb-1.5 block text-sm font-semibold">
+                  <label
+                    htmlFor="campo-gramatura"
+                    className="mb-1.5 block text-sm font-semibold"
+                  >
                     Gramatura
                   </label>
                   <input
@@ -261,16 +346,19 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
                     type="text"
                     inputMode="numeric"
                     value={form.gramatura}
-                    onChange={setField('gramatura')}
+                    onChange={setField("gramatura")}
                     placeholder="Ex: 150g"
                     aria-invalid={Boolean(errors.gramatura)}
-                    aria-describedby={describe('gramatura')}
-                    className={fieldClass('gramatura')}
+                    aria-describedby={describe("gramatura")}
+                    className={fieldClass("gramatura")}
                   />
                   <ErrorText name="gramatura" />
                 </div>
                 <div>
-                  <label htmlFor="campo-preco" className="mb-1.5 block text-sm font-semibold">
+                  <label
+                    htmlFor="campo-preco"
+                    className="mb-1.5 block text-sm font-semibold"
+                  >
                     Preço
                   </label>
                   <input
@@ -278,11 +366,11 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
                     type="text"
                     inputMode="decimal"
                     value={form.preco}
-                    onChange={setField('preco')}
+                    onChange={setField("preco")}
                     placeholder="Ex: 49,90"
                     aria-invalid={Boolean(errors.preco)}
-                    aria-describedby={describe('preco')}
-                    className={fieldClass('preco')}
+                    aria-describedby={describe("preco")}
+                    className={fieldClass("preco")}
                   />
                   <ErrorText name="preco" />
                 </div>
@@ -294,27 +382,47 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-jaca-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-jaca-700 disabled:opacity-60"
               >
                 <Plus aria-hidden="true" className="h-4 w-4" />
-                {saving ? 'Salvando…' : 'Adicionar produto'}
+                {saving
+                  ? "Salvando…"
+                  : editingId !== null
+                    ? "Salvar alterações"
+                    : "Adicionar produto"}
               </button>
+              {editingId !== null && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="w-full rounded-xl border border-ink/15 px-4 py-3 text-sm font-semibold hover:bg-ink/5"
+                >
+                  Cancelar edição
+                </button>
+              )}
             </form>
           </section>
 
           {/* ---------- Produtos publicados ---------- */}
-          <section aria-labelledby="publicados-titulo" className="h-fit min-w-0 rounded-2xl bg-white p-6 shadow-card">
+          <section
+            aria-labelledby="publicados-titulo"
+            className="h-fit min-w-0 rounded-2xl bg-white p-6 shadow-card"
+          >
             <div className="flex items-start justify-between gap-3 border-b border-ink/10 pb-4">
               <div>
                 <h2 id="publicados-titulo" className="font-bold">
                   Produtos publicados
                 </h2>
-                <p className="text-sm text-ink/70">Itens que aparecem na página inicial.</p>
+                <p className="text-sm text-ink/70">
+                  Itens que aparecem na página inicial.
+                </p>
               </div>
               <span className="rounded-full bg-ink/5 px-3 py-1 text-xs font-semibold">
-                {products.length} {products.length === 1 ? 'item' : 'itens'}
+                {products.length} {products.length === 1 ? "item" : "itens"}
               </span>
             </div>
 
             {products.length === 0 ? (
-              <p className="py-8 text-center text-sm text-ink/70">Nenhum produto publicado ainda.</p>
+              <p className="py-8 text-center text-sm text-ink/70">
+                Nenhum produto publicado ainda.
+              </p>
             ) : (
               <ul className="divide-y divide-ink/10">
                 {products.map((product) => (
@@ -327,8 +435,11 @@ export default function AdminDashboard({ products, onCreate, onDelete, onLogout,
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-bold">{product.nome}</p>
                       <p className="text-sm text-ink/75">
-                        {formatWeight(product.gramatura)} <span aria-hidden="true">•</span>{' '}
-                        <span className="font-bold text-jaca-700">{formatPrice(product.preco)}</span>
+                        {formatWeight(product.gramatura)}{" "}
+                        <span aria-hidden="true">•</span>{" "}
+                        <span className="font-bold text-jaca-700">
+                          {formatPrice(product.preco)}
+                        </span>
                       </p>
                     </div>
                     {confirmId === product.id ? (

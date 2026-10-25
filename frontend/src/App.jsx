@@ -1,34 +1,42 @@
-import { useState } from 'react';
-import AdminDashboard from './components/AdminDashboard';
-import Catalog from './components/Catalog';
-import Header from './components/Header';
-import Hero from './components/Hero';
-import LoginModal from './components/LoginModal';
-import { useAuth } from './context/AuthContext';
-import useProducts from './hooks/useProducts';
+import { useState } from "react";
+import AdminDashboard from "./components/AdminDashboard";
+import Catalog from "./components/Catalog";
+import Header from "./components/Header";
+import Hero from "./components/Hero";
+import LoginModal from "./components/LoginModal";
+import { useAuth } from "./context/AuthContext";
+import useProducts from "./hooks/useProducts";
 
 export default function App() {
   const { isAuthenticated, login, logout } = useAuth();
-  const { products, loading, error, reload, addProduct, removeProduct } = useProducts();
-  const [view, setView] = useState('store'); // 'store' | 'admin'
+  const {
+    products,
+    loading,
+    error,
+    reload,
+    addProduct,
+    editProduct,
+    removeProduct,
+  } = useProducts();
+  const [view, setView] = useState("store"); // 'store' | 'admin'
   const [loginOpen, setLoginOpen] = useState(false);
 
-  const showAdmin = isAuthenticated && view === 'admin';
+  const showAdmin = isAuthenticated && view === "admin";
 
   const handleAdminClick = () => {
-    if (isAuthenticated) setView('admin');
+    if (isAuthenticated) setView("admin");
     else setLoginOpen(true);
   };
 
   const handleLogin = async (credentials) => {
     await login(credentials);
     setLoginOpen(false);
-    setView('admin');
+    setView("admin");
   };
 
   const handleLogout = () => {
     logout();
-    setView('store');
+    setView("store");
   };
 
   if (showAdmin) {
@@ -36,9 +44,10 @@ export default function App() {
       <AdminDashboard
         products={products}
         onCreate={addProduct}
+        onEdit={editProduct}
         onDelete={removeProduct}
         onLogout={handleLogout}
-        onBackToStore={() => setView('store')}
+        onBackToStore={() => setView("store")}
       />
     );
   }
@@ -51,15 +60,27 @@ export default function App() {
       >
         Pular para o catálogo
       </a>
-      <Header isAuthenticated={isAuthenticated} onAdminClick={handleAdminClick} />
+      <Header
+        isAuthenticated={isAuthenticated}
+        onAdminClick={handleAdminClick}
+      />
       <main>
         <Hero />
-        <Catalog products={products} loading={loading} error={error} onRetry={reload} />
+        <Catalog
+          products={products}
+          loading={loading}
+          error={error}
+          onRetry={reload}
+        />
       </main>
       <footer className="border-t border-ink/10 py-8 text-center text-sm text-ink/70">
         © {new Date().getFullYear()} Jaca 3D · Feito camada por camada
       </footer>
-      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onSubmit={handleLogin} />
+      <LoginModal
+        open={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onSubmit={handleLogin}
+      />
     </>
   );
 }

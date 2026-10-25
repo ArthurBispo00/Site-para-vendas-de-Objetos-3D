@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from "react";
 import {
   createProduct,
   deleteProduct,
   getProducts,
+  updateProduct,
   toUserMessage,
-} from '../services/apiService';
+} from "../services/apiService";
 
 export default function useProducts() {
   const [products, setProducts] = useState([]);
@@ -14,6 +15,7 @@ export default function useProducts() {
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
+
     try {
       setProducts(await getProducts());
     } catch (err) {
@@ -33,10 +35,28 @@ export default function useProducts() {
     return created;
   }, []);
 
-  const removeProduct = useCallback(async (id) => {
-    await deleteProduct(id);
-    setProducts((prev) => prev.filter((p) => p.id !== id));
+  const editProduct = useCallback(async (id, data) => {
+    const updated = await updateProduct(id, data);
+
+    setProducts((prev) =>
+      prev.map((product) => (product.id === updated.id ? updated : product)),
+    );
+
+    return updated;
   }, []);
 
-  return { products, loading, error, reload: load, addProduct, removeProduct };
+  const removeProduct = useCallback(async (id) => {
+    await deleteProduct(id);
+    setProducts((prev) => prev.filter((product) => product.id !== id));
+  }, []);
+
+  return {
+    products,
+    loading,
+    error,
+    reload: load,
+    addProduct,
+    editProduct,
+    removeProduct,
+  };
 }
