@@ -1,3 +1,4 @@
+import os
 
 from contextlib import asynccontextmanager
 
@@ -10,7 +11,8 @@ from app.routes.produtos import router as produtos_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    criar_administrador_inicial()
+    if os.getenv("APP_ENV") != "test":
+        criar_administrador_inicial()
     yield
 
 
